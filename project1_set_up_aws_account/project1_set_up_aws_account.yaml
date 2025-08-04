@@ -1,0 +1,39 @@
+# How to Deploy this CloudFormation Template
+#
+# Option 1: AWS Management Console
+# 1. Sign in to the AWS Console and go to CloudFormation.
+# 2. Click 'Create stack' > 'With new resources (standard)'.
+# 3. Upload this YAML file and follow the prompts.
+#
+# Option 2: AWS CLI
+# 1. Open your terminal and navigate to the folder containing this file.
+# 2. Run:
+#    aws cloudformation create-stack --stack-name billing-alarm-stack --template-body file://project1_set_up_aws_account.yaml
+# 3. To check status:
+#    aws cloudformation describe-stacks --stack-name billing-alarm-stack
+#
+AWSTemplateFormatVersion: '2010-09-09'  # Specifies the version of the CloudFormation template format
+Description: >
+  Sets up a basic billing alarm to notify when estimated charges exceed $10.
+  (Run this after your AWS account is created.)
+
+Resources:
+  BillingAlarm:
+    Type: 'AWS::CloudWatch::Alarm'  # Defines a CloudWatch Alarm resource
+    Properties:
+      AlarmDescription: 'Alarm when AWS charges exceed $5'  # Description of the alarm
+      Namespace: 'AWS/Billing'  # The namespace for billing metrics
+      MetricName: 'EstimatedCharges'  # The metric to monitor
+      Dimensions:
+        - Name: 'Currency'  # Dimension name for the metric
+          Value: 'USD'      # Currency to monitor (US Dollars)
+      Statistic: 'Maximum'  # Statistic to use for the metric
+      Period: 21600         # Evaluation period in seconds (6 hours)
+      EvaluationPeriods: 1  # Number of periods to evaluate
+      Threshold: 5        # The threshold for triggering the alarm ($10)
+      ComparisonOperator: 'GreaterThanThreshold'  # Condition for alarm
+      AlarmActions: ['arn:aws:sns:us-east-2:361769562364:awschargenotification']     # List of actions (e.g., SNS topic ARN) to execute when alarm is triggered
+      InsufficientDataActions: []  # Actions when data is insufficient
+      OKActions: []         # Actions when alarm returns to OK state
+      Unit: 'None'          # Unit of the metric
+# Note: To receive notifications, create an SNS topic and subscribe your email, then add the topic ARN to AlarmActions. 
